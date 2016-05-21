@@ -11,10 +11,13 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.Timer;
 
 public class Board
 {
@@ -39,7 +42,7 @@ public class Board
 		c.setXY(new Point(x, y));
 		return c;
 	}
-
+        
        	/*
 	 * This class handles all of the logic of moving the Card components as well
 	 * as the game logic. This determines where Cards can be moved according to
@@ -47,16 +50,58 @@ public class Board
 	 */
 	private static class CardMovementManager extends MouseAdapter
 	{
+           
+                MouseEvent startE, stopE;
+                boolean released = false;
+                private Timer timer = new Timer(200, new ActionListener() 
+                {
+                    @Override
+                    public void actionPerformed(ActionEvent e) 
+                    {
+                        if(released)
+                        {
+                            // timer has gone off, so treat as a single click
+                            System.out.println("single!");
+                            deck.handleMousePress(startE.getPoint());
+                            deck.handleMouseRelease(startE.getPoint());
+                        }
+                        timer.stop();
+                        table.repaint();
+
+                    }
+                });
+            
 		@Override
 		public void mousePressed(MouseEvent e)
 		{
-			deck.handleMousePress(e.getPoint());
+                    startE = e;
+                    released = false;
+                    if(timer.isRunning())
+                    {
+                        timer.stop();
+                        System.out.println("double click!");
+                        deck.handleDoubleClick(e.getPoint());
+                    }
+                    else
+                    {
+                        deck.updateSourceCard(e.getPoint());
+                        timer.restart();
+                    }
+                    table.repaint();
 		}
                 
 		@Override
 		public void mouseReleased(MouseEvent e)
 		{
-                    deck.handleMouseRelease(e.getPoint());
+                    released = true;
+                    if (!timer.isRunning())
+                    {
+                        stopE = e;
+                        if(deck.isDragMove(startE.getPoint(), e.getPoint()))
+                        {
+                            deck.handleMouseRelease(e.getPoint());
+                        }
+                    }
                     table.repaint();
 		}
 	} 
