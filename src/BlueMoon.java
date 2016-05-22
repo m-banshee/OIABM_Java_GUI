@@ -428,6 +428,11 @@ class BlueMoon extends JComponent
             }
 	}
 
+        public void restart()
+        {
+            
+        }
+        
 	@Override
 	public boolean contains(Point p)
 	{
