@@ -256,7 +256,7 @@ class BlueMoon extends JComponent
         {
             sourceRow = getSourceRow(p);
             
-            if(!L_piles.elementAt(sourceRow).isEmpty())
+            if(sourceRow != -1 && !L_piles.elementAt(sourceRow).isEmpty())
             {
                 if(sourceRow == 4)
                     source = L_piles.elementAt(sourceRow).elementAt(deckPtr);
@@ -518,6 +518,7 @@ class BlueMoon extends JComponent
                         add(Board.moveCard(c, pilePos[i].x + (j+1) * SPREAD, pilePos[i].y));
                         c.setWhereAmI(getXY());
                         
+                        //c.setFaceup();
                         c.setFacedown();
                     } 
                     /* Spreads deck for single card */
@@ -528,6 +529,7 @@ class BlueMoon extends JComponent
                     /* Paint deck card */
                     else if(j != deckPtr)
                     {
+                        //c.setFaceup();
                         c.setFacedown();
                         c.setXY(new Point(pilePos[i].x + spreadVar + (j + 1) * SPREAD, pilePos[i].y));
                         add(Board.moveCard(c, pilePos[i].x + spreadVar + (j + 1) * SPREAD, pilePos[i].y));

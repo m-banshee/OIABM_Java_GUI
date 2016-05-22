@@ -1,7 +1,7 @@
 /*!******************************************************************************
   * @file    Board.java
   * @author  Mark Banchy
-  * @date    Mar 20, 2016
+  * @date    May 20, 2016
   * @brief   Board class for java "Once In A Blue Moon" solitaire variant.\n
   *          Designed to contain a solitaire class, in this case BlueMoon.
   *****************************************************************************/
@@ -53,7 +53,7 @@ public class Board
            
                 MouseEvent startE, stopE;
                 boolean released = false;
-                private Timer timer = new Timer(200, new ActionListener() 
+                private Timer timer = new Timer(300, new ActionListener() 
                 {
                     @Override
                     public void actionPerformed(ActionEvent e) 
