@@ -1,7 +1,7 @@
 /*!******************************************************************************
   * @file    BlueMoon.java
   * @author  Mark Banchy
-  * @date    Mar 20, 2016
+  * @date    May 20, 2016
   * @brief   Java class for implementing "Once In A Blue Moon".\n 
   *          Implements logic for painting and moving cards.
   *****************************************************************************/
@@ -212,6 +212,63 @@ class BlueMoon extends JComponent
             return isCardEligible(source, destRow);
         }
 
+        public boolean isDragMove(Point p1, Point p2)
+        {
+            return getSourceRow(p1) != getSourceRow(p2);
+        }
+        
+        public void handleDoubleClick(Point p)
+        {
+            updateSourceCard(p);
+            
+            if(sourceRow != -1)
+            {
+                
+                for(int i = 0; i < 4; i++)
+                {
+                    /* Determine if move is valid */
+                    if (validPlayStackMove(source, i)) 
+                    {
+                        Card temp;
+
+                        /* Check sourceRow and destRow combo is valid */
+                        if (sourceRow != 4) 
+                        {
+                            /* Move card from Left pile to Right pile */
+                            temp = L_piles.elementAt(sourceRow).elementAt(0);
+                            L_piles.elementAt(sourceRow).remove(0);
+                            R_piles.elementAt(i).add(temp);
+                        } 
+                        else if (sourceRow == 4) 
+                        {
+                            /* Move card from Left pile to Right pile */
+                            temp = L_piles.elementAt(sourceRow).elementAt(deckPtr);
+                            L_piles.elementAt(sourceRow).remove(deckPtr);
+                            R_piles.elementAt(i).add(temp);
+                            decDeckPtr();
+                        }
+                    }
+                }
+            }
+        }
+        
+        public void updateSourceCard(Point p)
+        {
+            sourceRow = getSourceRow(p);
+            
+            if(sourceRow != -1 && !L_piles.elementAt(sourceRow).isEmpty())
+            {
+                if(sourceRow == 4)
+                    source = L_piles.elementAt(sourceRow).elementAt(deckPtr);
+                else
+                    source = L_piles.elementAt(sourceRow).firstElement();
+            }
+            else
+            {
+                sourceRow = -1;
+            }
+        }
+        
 	public void handleMousePress(Point start)
 	{     
             /* Determine row hitbox for source card */
@@ -270,7 +327,7 @@ class BlueMoon extends JComponent
         {
             /* Determine destination row from 'stop' Point */
             destRow = getDestRow(stop);
-            
+
             /* Verify destRow and source card is valid */
             if (destRow != -1 && destRow <= 4 && source != null) 
             {
@@ -461,6 +518,7 @@ class BlueMoon extends JComponent
                         add(Board.moveCard(c, pilePos[i].x + (j+1) * SPREAD, pilePos[i].y));
                         c.setWhereAmI(getXY());
                         
+                        //c.setFaceup();
                         c.setFacedown();
                     } 
                     /* Spreads deck for single card */
@@ -471,6 +529,7 @@ class BlueMoon extends JComponent
                     /* Paint deck card */
                     else if(j != deckPtr)
                     {
+                        //c.setFaceup();
                         c.setFacedown();
                         c.setXY(new Point(pilePos[i].x + spreadVar + (j + 1) * SPREAD, pilePos[i].y));
                         add(Board.moveCard(c, pilePos[i].x + spreadVar + (j + 1) * SPREAD, pilePos[i].y));
