@@ -18,6 +18,7 @@ import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import javax.swing.AbstractAction;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -25,11 +26,12 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.KeyStroke;
 import javax.swing.Timer;
 import javax.swing.event.MenuKeyEvent;
 import javax.swing.event.MenuKeyListener;
 
-public class Board implements ActionListener, ItemListener
+public class Board implements ItemListener
 {
 	// CONSTANTS
 	public static final int TABLE_HEIGHT = Card.CARD_HEIGHT * 6;
@@ -39,14 +41,41 @@ public class Board implements ActionListener, ItemListener
 
 	public static final Point DECK_POS = new Point(5, 5);
 
-	private static BlueMoon deck, prevMove = null;
+	private static BlueMoon deck;
 
 	// GUI COMPONENTS (top level)
 	private static final JFrame frame = new JFrame("Once In A Blue Moon");
 	protected static final JPanel table = new JPanel();
          
+        private class undoAction extends AbstractAction 
+        {
+            @Override
+            public void actionPerformed(ActionEvent e) 
+            {
+                deck.popPrevMove();
+                table.removeAll();
+                table.add(deck);
+                table.repaint();
+            }
+        }
+        
+        private class newGame extends AbstractAction 
+        {
+            @Override
+            public void actionPerformed(ActionEvent e) 
+            {
+                playNewGame();
+            }
+        }
+        
         public JMenuBar makeMenu()
         {
+            table.getInputMap().put(KeyStroke.getKeyStroke("control Z"), "undo");
+            table.getActionMap().put("undo", new undoAction());
+            
+            table.getInputMap().put(KeyStroke.getKeyStroke("N"), "New Game");
+            table.getActionMap().put("New Game", new newGame());
+            
             JMenuBar menuBar;
             JMenu menu, submenu;
             JMenuItem menuItem;
@@ -62,35 +91,21 @@ public class Board implements ActionListener, ItemListener
 
             menuBar.add(menu);
             menuItem = new JMenuItem("New Game",
-                    KeyEvent.VK_T);
+                    KeyEvent.VK_N);
             menu.add(menuItem);
-            menuItem.addActionListener(this);
+            menuItem.addActionListener(new newGame());
 
             menuBar.add(menu);
             menuItem = new JMenuItem("Undo Move",
                     KeyEvent.VK_U);
             menu.add(menuItem);
-            menuItem.addActionListener(this);
+            menuItem.addActionListener(new undoAction());
             
             menu = new JMenu("Help");
             menuBar.add(menu);
 
             frame.setJMenuBar(menuBar);
             return menuBar;
-        }
-        
-        @Override
-        public void actionPerformed(ActionEvent e) 
-        {
-            JMenuItem source = (JMenuItem)(e.getSource());
-            if(source.getText() == "New Game")
-            {
-                playNewGame();
-            }
-            else if(source.getText() == "Undo Move")
-            {
-                undoLastMove();
-            }
         }
 
         @Override
@@ -99,19 +114,7 @@ public class Board implements ActionListener, ItemListener
             System.out.println("item state change");
         }
         
-        public void undoLastMove()
-        {
-            if(this.prevMove != null)
-            {
-                System.out.println("trying to undo");
-                deck.popPrevMove();
 
-                table.removeAll();
-                table.add(deck);
-
-                table.repaint();
-            }
-        }
         
 	// moves a card to abs location within a component
 	protected static Card moveCard(Card c, int x, int y)
@@ -140,7 +143,6 @@ public class Board implements ActionListener, ItemListener
                         {
                             // timer has gone off, so treat as a single click
                             //System.out.println("single!");
-                            prevMove = deck;
                             deck.handleMousePress(startE.getPoint());
                             deck.handleMouseRelease(startE.getPoint());
                         }
@@ -160,7 +162,6 @@ public class Board implements ActionListener, ItemListener
                     {
                         timer.stop();
                         //System.out.println("double click!");
-                        prevMove = deck;
                         deck.handleDoubleClick(e.getPoint());
                     }
                     else
@@ -180,7 +181,6 @@ public class Board implements ActionListener, ItemListener
                         stopE = e;
                         if(deck.isDragMove(startE.getPoint(), e.getPoint()))
                         {
-                            prevMove = deck;
                             deck.handleMouseRelease(e.getPoint());
                         }
                     }
