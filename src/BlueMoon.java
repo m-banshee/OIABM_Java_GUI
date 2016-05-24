@@ -219,7 +219,7 @@ class BlueMoon extends JComponent
             return getSourceRow(p1) != getSourceRow(p2);
         }
         
-        public void performUndo(int sRow, int dRow)
+        public void performUndo(int sRow, int dRow, int dPtr)
         {
             Card temp;
             if(sRow == 4 && dRow != 4)
@@ -238,19 +238,7 @@ class BlueMoon extends JComponent
             }
             else if(sRow == 4 && dRow == 4)
             {
-                if(deckPtr == (L_piles.elementAt(4).size() - 1))
-                {
-                    deckPtr = L_piles.elementAt(4).size() - (L_piles.elementAt(4).size() % 3) - 1;
-                }
-                else if(deckPtr > 2)
-                {
-                    deckPtr -= 3;
-                }
-                else
-                {
-                    System.out.println("else");
-                    deckPtr = L_piles.elementAt(4).size() - 1;
-                }
+                deckPtr = dPtr;
             }
             else
             {
@@ -265,19 +253,22 @@ class BlueMoon extends JComponent
         {
             if(prevMoves.size() > 0)
             {
+                
                 int[] arr = prevMoves.elementAt(prevMoves.size() - 1);
-                performUndo(arr[0], arr[1]);
+                //System.out.println("Pop: " + arr[0] + " " + arr[1]+ " " + arr[2]);
+                performUndo(arr[0], arr[1], arr[2]);
                 prevMoves.removeElementAt(prevMoves.size() - 1);
             }
         }
         
-        public void pushPrevMove(int sRow, int dRow)
+        public void pushPrevMove(int sRow, int dRow, int dPtr)
         {
-            int[] tempMove = new int[2];
+            int[] tempMove = new int[3];
             tempMove[0] = sRow;
             tempMove[1] = dRow;
+            tempMove[2] = dPtr;
             prevMoves.add(tempMove);
-            //System.out.println(prevMoves.lastElement()[0] + " " + prevMoves.lastElement()[1]);
+            //System.out.println("Push: " + prevMoves.lastElement()[0] + " " + prevMoves.lastElement()[1]+ " " + prevMoves.lastElement()[2]);
         }
         
         public void handleDoubleClick(Point p)
@@ -297,7 +288,7 @@ class BlueMoon extends JComponent
                         /* Check sourceRow and destRow combo is valid */
                         if (sourceRow != 4) 
                         {
-                            pushPrevMove(sourceRow, i);
+                            pushPrevMove(sourceRow, i, deckPtr);
                             /* Move card from Left pile to Right pile */
                             temp = L_piles.elementAt(sourceRow).elementAt(0);
                             L_piles.elementAt(sourceRow).remove(0);
@@ -305,7 +296,7 @@ class BlueMoon extends JComponent
                         } 
                         else if (sourceRow == 4) 
                         {
-                            pushPrevMove(sourceRow, i);
+                            pushPrevMove(sourceRow, i, deckPtr);
                             /* Move card from Left pile to Right pile */
                             temp = L_piles.elementAt(sourceRow).elementAt(deckPtr);
                             L_piles.elementAt(sourceRow).remove(deckPtr);
@@ -392,7 +383,7 @@ class BlueMoon extends JComponent
                     /* Check sourceRow and destRow combo is valid */
                     if (sourceRow < 4 && destRow != 4) 
                     {
-                        pushPrevMove(sourceRow, destRow);
+                        pushPrevMove(sourceRow, destRow, deckPtr);
                         /* Move card from Left pile to Right pile */
                         temp = L_piles.elementAt(sourceRow).elementAt(0);
                         L_piles.elementAt(sourceRow).remove(0);
@@ -400,13 +391,13 @@ class BlueMoon extends JComponent
                     } 
                     else if (sourceRow == 4 && destRow == 4) 
                     {
-                        pushPrevMove(sourceRow, destRow);
+                        pushPrevMove(sourceRow, destRow, deckPtr);
                         /* Deck flip */
                         incDeckPtr();
                     } 
                     else if (destRow != 4) 
                     {
-                        pushPrevMove(sourceRow, destRow);
+                        pushPrevMove(sourceRow, destRow, deckPtr);
                         /* Move card from Left pile to Right pile */
                         temp = L_piles.elementAt(sourceRow).elementAt(deckPtr);
                         L_piles.elementAt(sourceRow).remove(deckPtr);
