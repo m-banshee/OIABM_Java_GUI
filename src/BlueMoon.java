@@ -41,6 +41,8 @@ class BlueMoon extends JComponent
 	protected int _y = 0;
 
         public int deckPtr = 2;
+        
+        Vector<int[]> prevMoves = new Vector<int[]>();
 
 	public BlueMoon()
 	{
@@ -217,6 +219,67 @@ class BlueMoon extends JComponent
             return getSourceRow(p1) != getSourceRow(p2);
         }
         
+        public void performUndo(int sRow, int dRow)
+        {
+            Card temp;
+            if(sRow == 4 && dRow != 4)
+            {
+                temp = R_piles.elementAt(dRow).elementAt(R_piles.elementAt(dRow).size() - 1);
+                if(deckPtr == 2)
+                {
+                    deckPtr = 0;
+                }
+                else
+                {
+                    deckPtr++;
+                }
+                L_piles.elementAt(sRow).add(deckPtr, temp);
+                R_piles.elementAt(dRow).removeElementAt(R_piles.elementAt(dRow).size() - 1);
+            }
+            else if(sRow == 4 && dRow == 4)
+            {
+                if(deckPtr == (L_piles.elementAt(4).size() - 1))
+                {
+                    deckPtr = L_piles.elementAt(4).size() - (L_piles.elementAt(4).size() % 3) - 1;
+                }
+                else if(deckPtr > 2)
+                {
+                    deckPtr -= 3;
+                }
+                else
+                {
+                    System.out.println("else");
+                    deckPtr = L_piles.elementAt(4).size() - 1;
+                }
+            }
+            else
+            {
+                temp = R_piles.elementAt(dRow).elementAt(R_piles.elementAt(dRow).size() - 1);
+                L_piles.elementAt(sRow).add(0, temp);
+                R_piles.elementAt(dRow).removeElementAt(R_piles.elementAt(dRow).size() - 1);
+            }
+            
+        }
+        
+        public void popPrevMove()
+        {
+            if(prevMoves.size() > 0)
+            {
+                int[] arr = prevMoves.elementAt(prevMoves.size() - 1);
+                performUndo(arr[0], arr[1]);
+                prevMoves.removeElementAt(prevMoves.size() - 1);
+            }
+        }
+        
+        public void pushPrevMove(int sRow, int dRow)
+        {
+            int[] tempMove = new int[2];
+            tempMove[0] = sRow;
+            tempMove[1] = dRow;
+            prevMoves.add(tempMove);
+            //System.out.println(prevMoves.lastElement()[0] + " " + prevMoves.lastElement()[1]);
+        }
+        
         public void handleDoubleClick(Point p)
         {
             updateSourceCard(p);
@@ -234,6 +297,7 @@ class BlueMoon extends JComponent
                         /* Check sourceRow and destRow combo is valid */
                         if (sourceRow != 4) 
                         {
+                            pushPrevMove(sourceRow, i);
                             /* Move card from Left pile to Right pile */
                             temp = L_piles.elementAt(sourceRow).elementAt(0);
                             L_piles.elementAt(sourceRow).remove(0);
@@ -241,6 +305,7 @@ class BlueMoon extends JComponent
                         } 
                         else if (sourceRow == 4) 
                         {
+                            pushPrevMove(sourceRow, i);
                             /* Move card from Left pile to Right pile */
                             temp = L_piles.elementAt(sourceRow).elementAt(deckPtr);
                             L_piles.elementAt(sourceRow).remove(deckPtr);
@@ -255,24 +320,6 @@ class BlueMoon extends JComponent
         public void updateSourceCard(Point p)
         {
             sourceRow = getSourceRow(p);
-            
-            if(sourceRow != -1 && !L_piles.elementAt(sourceRow).isEmpty())
-            {
-                if(sourceRow == 4)
-                    source = L_piles.elementAt(sourceRow).elementAt(deckPtr);
-                else
-                    source = L_piles.elementAt(sourceRow).firstElement();
-            }
-            else
-            {
-                sourceRow = -1;
-            }
-        }
-        
-	public void handleMousePress(Point start)
-	{     
-            /* Determine row hitbox for source card */
-            sourceRow = getSourceRow(start);
             
             /* Verify source row is valid and source pile isn't empty */
             if (sourceRow >= 0 && sourceRow < 5 && !L_piles.elementAt(sourceRow).isEmpty()) 
@@ -294,6 +341,11 @@ class BlueMoon extends JComponent
                 sourceRow = -1;
                 source = null;
             }
+         }
+        
+	public void handleMousePress(Point start)
+	{     
+            updateSourceCard(start);
         }
 
         /* Determine source row from Point object 'start' */
@@ -333,12 +385,14 @@ class BlueMoon extends JComponent
             {
                 /* Determine if move is valid */
                 if (validPlayStackMove(source, destRow)) 
+                //if(true)
                 {
                     Card temp = null;
                     
                     /* Check sourceRow and destRow combo is valid */
                     if (sourceRow < 4 && destRow != 4) 
                     {
+                        pushPrevMove(sourceRow, destRow);
                         /* Move card from Left pile to Right pile */
                         temp = L_piles.elementAt(sourceRow).elementAt(0);
                         L_piles.elementAt(sourceRow).remove(0);
@@ -346,11 +400,13 @@ class BlueMoon extends JComponent
                     } 
                     else if (sourceRow == 4 && destRow == 4) 
                     {
+                        pushPrevMove(sourceRow, destRow);
                         /* Deck flip */
                         incDeckPtr();
                     } 
                     else if (destRow != 4) 
                     {
+                        pushPrevMove(sourceRow, destRow);
                         /* Move card from Left pile to Right pile */
                         temp = L_piles.elementAt(sourceRow).elementAt(deckPtr);
                         L_piles.elementAt(sourceRow).remove(deckPtr);
@@ -427,7 +483,7 @@ class BlueMoon extends JComponent
 		v.removeElement(c);
             }
 	}
-
+        
 	@Override
 	public boolean contains(Point p)
 	{
@@ -466,6 +522,10 @@ class BlueMoon extends JComponent
                     if (j == 0) 
                     {
                         c.setFaceup();
+                    }
+                    else
+                    {
+                        c.setFacedown();
                     }
                     
                     /* Set paint coordinates for card */
