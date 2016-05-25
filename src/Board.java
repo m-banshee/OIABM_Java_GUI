@@ -148,7 +148,6 @@ public class Board implements ItemListener
                         }
                         timer.stop();
                         table.repaint();
-
                     }
                 });
             

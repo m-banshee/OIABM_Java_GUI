@@ -11,6 +11,8 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.util.Vector;
 import java.io.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.JComponent;
 
@@ -43,6 +45,8 @@ class BlueMoon extends JComponent
         public int deckPtr = 2;
         
         Vector<int[]> prevMoves = new Vector<int[]>();
+        
+        boolean changeHappened = true;
 
 	public BlueMoon()
 	{
@@ -246,7 +250,7 @@ class BlueMoon extends JComponent
                 L_piles.elementAt(sRow).add(0, temp);
                 R_piles.elementAt(dRow).removeElementAt(R_piles.elementAt(dRow).size() - 1);
             }
-            
+            changeHappened = true;
         }
         
         public void popPrevMove()
@@ -258,6 +262,7 @@ class BlueMoon extends JComponent
                 //System.out.println("Pop: " + arr[0] + " " + arr[1]+ " " + arr[2]);
                 performUndo(arr[0], arr[1], arr[2]);
                 prevMoves.removeElementAt(prevMoves.size() - 1);
+               
             }
         }
         
@@ -277,14 +282,13 @@ class BlueMoon extends JComponent
             
             if(sourceRow != -1)
             {
-                
                 for(int i = 0; i < 4; i++)
                 {
                     /* Determine if move is valid */
                     if (validPlayStackMove(source, i)) 
                     {
                         Card temp;
-
+                        
                         /* Check sourceRow and destRow combo is valid */
                         if (sourceRow != 4) 
                         {
@@ -303,6 +307,7 @@ class BlueMoon extends JComponent
                             R_piles.elementAt(i).add(temp);
                             decDeckPtr();
                         }
+                        changeHappened = true;
                     }
                 }
             }
@@ -404,6 +409,7 @@ class BlueMoon extends JComponent
                         R_piles.elementAt(destRow).add(temp);
                         decDeckPtr();
                     }
+                    changeHappened = true;
                 }
             } 
             /* Invalid parameters */
@@ -497,98 +503,102 @@ class BlueMoon extends JComponent
 	@Override
 	protected void paintComponent(Graphics g)
 	{
-            super.paintComponent(g);
-            removeAll();
-            
-            /* Cycle through the four Left piles */
-            for (int i = 0; i < 4; i++) 
+            if(changeHappened)
             {
-                Vector<Card> outer = L_piles.elementAt(i);
-                /* Cycle through each left pile */
-                for (int j = 0; j < outer.size(); j++) 
+                //System.out.println("printing");
+                super.paintComponent(g);
+                removeAll();
+
+                /* Cycle through the four Left piles */
+                for (int i = 0; i < 4; i++) 
                 {
-                    Card c = outer.elementAt(j);
-                    
-                    /* If it's the top, set it faceup */
-                    if (j == 0) 
+                    Vector<Card> outer = L_piles.elementAt(i);
+                    /* Cycle through each left pile */
+                    for (int j = 0; j < outer.size(); j++) 
                     {
+                        Card c = outer.elementAt(j);
+
+                        /* If it's the top, set it faceup */
+                        if (j == 0) 
+                        {
+                            c.setFaceup();
+                        }
+                        else
+                        {
+                            c.setFacedown();
+                        }
+
+                        /* Set paint coordinates for card */
+                        c.setXY(new Point(pilePos[i].x + j * SPREAD, pilePos[i].y));
+                        add(Board.moveCard(c, pilePos[i].x + j * SPREAD, pilePos[i].y));
+                        c.setWhereAmI(getXY());
+                    }
+
+                    Vector<Card> rp = R_piles.elementAt(i);
+                    /* Cycle through each right pile */
+                    for (int j = rp.size(); j > 0 ; j--) 
+                    {
+                        /* Set them faceup */
+                        Card c = rp.elementAt(j-1);
                         c.setFaceup();
-                    }
-                    else
-                    {
-                        c.setFacedown();
-                    }
-                    
-                    /* Set paint coordinates for card */
-                    c.setXY(new Point(pilePos[i].x + j * SPREAD, pilePos[i].y));
-                    add(Board.moveCard(c, pilePos[i].x + j * SPREAD, pilePos[i].y));
-                    c.setWhereAmI(getXY());
-                }
-                
-                Vector<Card> rp = R_piles.elementAt(i);
-                /* Cycle through each right pile */
-                for (int j = rp.size(); j > 0 ; j--) 
-                {
-                    /* Set them faceup */
-                    Card c = rp.elementAt(j-1);
-                    c.setFaceup();
 
-                    /* Set Pain coordinates for card */
-                    c.setXY(new Point(pilePos[i].x + ROW_START_X + j*(SPREAD*2), pilePos[i].y));
-                    add(Board.moveCard(c, pilePos[i].x + ROW_START_X + j*(SPREAD*2), pilePos[i].y));
-                    c.setWhereAmI(getXY());
-                }
-            }    
-            
-            int spreadVar = 0;
-
-            /* If deck isn't empty, show card at deckPtr */
-            if(!L_piles.elementAt(4).isEmpty())
-            {
-                Card c_temp = L_piles.elementAt(4).elementAt(deckPtr);
-                c_temp.setFaceup();
-                c_temp.setXY(new Point(pilePos[4].x, pilePos[4].y));
-                add(Board.moveCard(c_temp, pilePos[4].x, pilePos[4].y));
-                c_temp.setWhereAmI(getXY());
-            }
-            
-            /* Don't actually know why I need this outer loop,
-               but it doesn't work without it. */
-            for(int i = 0; i < 5; i++)
-            {
-                /* Cycle through deck pile */
-                for (int j = 0; j < L_piles.elementAt(4).size(); j++) 
-                {
-                    Card c = L_piles.elementAt(4).elementAt(j);
-                    
-                    /* Set spread variable if it's one card before deckPtr */
-                    if (j == deckPtr - 1) 
-                    {
-                        spreadVar = 80;
-                        c.setXY(new Point(pilePos[i].x + (j+1) * SPREAD, pilePos[i].y));
-                        add(Board.moveCard(c, pilePos[i].x + (j+1) * SPREAD, pilePos[i].y));
-                        c.setWhereAmI(getXY());
-                        
-                        //c.setFaceup();
-                        c.setFacedown();
-                    } 
-                    /* Spreads deck for single card */
-                    else if(j == 0 && deckPtr == 0)
-                    {
-                        spreadVar = 80;
-                    }
-                    /* Paint deck card */
-                    else if(j != deckPtr)
-                    {
-                        //c.setFaceup();
-                        c.setFacedown();
-                        c.setXY(new Point(pilePos[i].x + spreadVar + (j + 1) * SPREAD, pilePos[i].y));
-                        add(Board.moveCard(c, pilePos[i].x + spreadVar + (j + 1) * SPREAD, pilePos[i].y));
+                        /* Set Pain coordinates for card */
+                        c.setXY(new Point(pilePos[i].x + ROW_START_X + j*(SPREAD*2), pilePos[i].y));
+                        add(Board.moveCard(c, pilePos[i].x + ROW_START_X + j*(SPREAD*2), pilePos[i].y));
                         c.setWhereAmI(getXY());
                     }
+                }    
+
+                int spreadVar = 0;
+
+                /* If deck isn't empty, show card at deckPtr */
+                if(!L_piles.elementAt(4).isEmpty())
+                {
+                    Card c_temp = L_piles.elementAt(4).elementAt(deckPtr);
+                    c_temp.setFaceup();
+                    c_temp.setXY(new Point(pilePos[4].x, pilePos[4].y));
+                    add(Board.moveCard(c_temp, pilePos[4].x, pilePos[4].y));
+                    c_temp.setWhereAmI(getXY());
                 }
-                spreadVar = 0;
-            }    
-                
+
+                /* Don't actually know why I need this outer loop,
+                   but it doesn't work without it. */
+                for(int i = 0; i < 5; i++)
+                {
+                    /* Cycle through deck pile */
+                    for (int j = 0; j < L_piles.elementAt(4).size(); j++) 
+                    {
+                        Card c = L_piles.elementAt(4).elementAt(j);
+
+                        /* Set spread variable if it's one card before deckPtr */
+                        if (j == deckPtr - 1) 
+                        {
+                            spreadVar = 80;
+                            c.setXY(new Point(pilePos[i].x + (j+1) * SPREAD, pilePos[i].y));
+                            add(Board.moveCard(c, pilePos[i].x + (j+1) * SPREAD, pilePos[i].y));
+                            c.setWhereAmI(getXY());
+
+                            //c.setFaceup();
+                            c.setFacedown();
+                        } 
+                        /* Spreads deck for single card */
+                        else if(j == 0 && deckPtr == 0)
+                        {
+                            spreadVar = 80;
+                        }
+                        /* Paint deck card */
+                        else if(j != deckPtr)
+                        {
+                            //c.setFaceup();
+                            c.setFacedown();
+                            c.setXY(new Point(pilePos[i].x + spreadVar + (j + 1) * SPREAD, pilePos[i].y));
+                            add(Board.moveCard(c, pilePos[i].x + spreadVar + (j + 1) * SPREAD, pilePos[i].y));
+                            c.setWhereAmI(getXY());
+                        }
+                    }
+                    spreadVar = 0;
+                }   
+            changeHappened = false;
 	}
+        }
 }
