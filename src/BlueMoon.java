@@ -407,8 +407,7 @@ class BlueMoon extends JComponent
             if (destRow != -1 && destRow <= 4 && source != null) 
             {
                 /* Determine if move is valid */
-                //if (validPlayStackMove(source, destRow)) 
-                if(true)
+                if (validPlayStackMove(source, destRow)) 
                 {
                     Card temp;
                     
