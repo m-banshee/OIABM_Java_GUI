@@ -19,17 +19,14 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.AbstractAction;
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
 import javax.swing.Timer;
-import javax.swing.event.MenuKeyEvent;
-import javax.swing.event.MenuKeyListener;
 
 public class Board implements ItemListener
 {
@@ -44,7 +41,7 @@ public class Board implements ItemListener
 	private static BlueMoon deck;
 
 	// GUI COMPONENTS (top level)
-	private static final JFrame frame = new JFrame("Once In A Blue Moon");
+	public static final JFrame frame = new JFrame("Once In A Blue Moon");
 	protected static final JPanel table = new JPanel();
          
         private class undoAction extends AbstractAction 
@@ -77,10 +74,8 @@ public class Board implements ItemListener
             table.getActionMap().put("New Game", new newGame());
             
             JMenuBar menuBar;
-            JMenu menu, submenu;
+            JMenu menu;
             JMenuItem menuItem;
-            JRadioButtonMenuItem rbMenuItem;
-            JCheckBoxMenuItem cbMenuItem;
             
             menuBar = new JMenuBar();
             menu = new JMenu("Game");
@@ -131,7 +126,6 @@ public class Board implements ItemListener
 	 */
 	private static class CardMovementManager extends MouseAdapter
 	{
-           
                 MouseEvent startE, stopE;
                 boolean released = false;
                 private Timer timer = new Timer(200, new ActionListener() 
@@ -142,7 +136,6 @@ public class Board implements ItemListener
                         if(released)
                         {
                             // timer has gone off, so treat as a single click
-                            //System.out.println("single!");
                             deck.handleMousePress(startE.getPoint());
                             deck.handleMouseRelease(startE.getPoint());
                         }
@@ -160,7 +153,6 @@ public class Board implements ItemListener
                     if(timer.isRunning())
                     {
                         timer.stop();
-                        //System.out.println("double click!");
                         deck.handleDoubleClick(e.getPoint());
                     }
                     else
@@ -168,6 +160,7 @@ public class Board implements ItemListener
                         deck.updateSourceCard(e.getPoint());
                         timer.restart();
                     }
+                    
                     table.repaint();
 		}
                 
@@ -183,13 +176,19 @@ public class Board implements ItemListener
                             deck.handleMouseRelease(e.getPoint());
                         }
                     }
+                    
+                    if(deck.winCheck())
+                    {
+                        deck.handleWin();
+                    }
+                    
                     table.repaint();
 		}
 	} 
 
 	private static void playNewGame()
 	{
-		deck = new BlueMoon(); // deal 52 cards
+		deck = new BlueMoon();
 
 		table.removeAll();
                 table.add(deck);
@@ -204,9 +203,9 @@ public class Board implements ItemListener
                 Board demo = new Board();
                 frame.setJMenuBar(demo.makeMenu());
                 
-                
 		frame.setSize(TABLE_WIDTH, TABLE_HEIGHT);
-
+                table.setSize(TABLE_WIDTH, TABLE_HEIGHT);
+                
 		table.setLayout(null);
 		table.setBackground(new Color(0, 180, 0));
 

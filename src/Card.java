@@ -18,12 +18,22 @@ class Card extends JPanel
 {
 	public static enum Value
 	{
-		ACE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN, JACK, QUEEN, KING
+		ACE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN, JACK, QUEEN, KING;
+                
+            public static Value getRandom() 
+            {
+                return values()[(int) (Math.random() * values().length)];
+            }
 	}
 
 	public static enum Suit
 	{
-		SPADES, CLUBS, DIAMONDS, HEARTS
+		SPADES, CLUBS, DIAMONDS, HEARTS;
+                
+            public static Suit getRandom() 
+            {
+                return values()[(int) (Math.random() * values().length)];
+            }
 	}
 
 	private Suit _suit;
@@ -65,8 +75,8 @@ class Card extends JPanel
 
 	Card() throws IOException
 	{
-		_suit = Card.Suit.CLUBS;
-		_value = Card.Value.ACE;
+		_suit = Card.Suit.getRandom();
+		_value = Card.Value.getRandom();
 		_faceup = false;
 		_location = new Point();
 		x = 0;
@@ -74,7 +84,7 @@ class Card extends JPanel
 		_location.x = x;
 		_location.y = y;
 		whereAmI = new Point();
-                File imageFile = new File("cards", "b.gif");
+                File imageFile = new File("cards", _value + "-" + _suit + ".gif");
                 this.image = ImageIO.read(imageFile);
                 imageFile = new File("cards", "b.gif");
                 this.back = ImageIO.read(imageFile);

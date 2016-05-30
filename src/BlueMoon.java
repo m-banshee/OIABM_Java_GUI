@@ -11,10 +11,12 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.util.Vector;
 import java.io.*;
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.swing.JComponent;
+import javax.swing.JOptionPane;
 
 /* This is GUI component with a embedded
  * data structure. This structure is a mixture
@@ -46,18 +48,20 @@ class BlueMoon extends JComponent
         
         Vector<int[]> prevMoves = new Vector<int[]>();
         
-        boolean changeHappened = true;
+        boolean changeHappened = true, winState = false;
+        winAnimation animation = new winAnimation();
+        paintManager deckPainter = new paintManager();
 
 	public BlueMoon()
 	{
             /* Initialize array of points to determine where to paint piles. */
-            pilePos[0] = new Point(BASE_X, 0*ROW_HEIGHT);
-            pilePos[1] = new Point(BASE_X, 1*ROW_HEIGHT);
-            pilePos[2] = new Point(BASE_X, 2*ROW_HEIGHT);
-            pilePos[3] = new Point(BASE_X, 3*ROW_HEIGHT);
-            pilePos[4] = new Point(BASE_X, 4*ROW_HEIGHT);
+            pilePos[0] = new Point(BASE_X + 5, 0*ROW_HEIGHT + 5);
+            pilePos[1] = new Point(BASE_X + 5, 1*ROW_HEIGHT + 5);
+            pilePos[2] = new Point(BASE_X + 5, 2*ROW_HEIGHT + 5);
+            pilePos[3] = new Point(BASE_X + 5, 3*ROW_HEIGHT + 5);
+            pilePos[4] = new Point(BASE_X + 5, 4*ROW_HEIGHT + 5);
 
-            this.setXY(BASE_X, BASE_Y);
+            this.setXY(0, 0);
 
             this.setLayout(null);
             tempDeck = new Vector<Card>();
@@ -116,20 +120,20 @@ class BlueMoon extends JComponent
             }
             
             /* Initialize hitboxes for piles */
-            hitBoxes[0][0] = new Rectangle(BASE_X, BASE_Y, BASE_X + 5*SPREAD + Card.CARD_WIDTH, Card.CARD_HEIGHT);
-            hitBoxes[0][1] = new Rectangle(BASE_X + ROW_START_X, BASE_Y, DEST_ROW_WIDTH, Card.CARD_HEIGHT);
+            hitBoxes[0][0] = new Rectangle(BASE_X + 5, BASE_Y + 5, BASE_X + 5*SPREAD + Card.CARD_WIDTH, Card.CARD_HEIGHT);
+            hitBoxes[0][1] = new Rectangle(BASE_X + 5 + ROW_START_X, BASE_Y + 5, DEST_ROW_WIDTH, Card.CARD_HEIGHT);
             
-            hitBoxes[1][0] = new Rectangle(BASE_X, BASE_Y + Card.CARD_HEIGHT, BASE_X + 5*SPREAD + Card.CARD_WIDTH, Card.CARD_HEIGHT);
-            hitBoxes[1][1] = new Rectangle(BASE_X + ROW_START_X, BASE_Y + Card.CARD_HEIGHT, DEST_ROW_WIDTH, Card.CARD_HEIGHT);
+            hitBoxes[1][0] = new Rectangle(BASE_X + 5, BASE_Y + Card.CARD_HEIGHT + 5, BASE_X + 5*SPREAD + Card.CARD_WIDTH, Card.CARD_HEIGHT);
+            hitBoxes[1][1] = new Rectangle(BASE_X + 5 + ROW_START_X, BASE_Y + Card.CARD_HEIGHT + 5, DEST_ROW_WIDTH, Card.CARD_HEIGHT);
             
-            hitBoxes[2][0] = new Rectangle(BASE_X, BASE_Y + 2*Card.CARD_HEIGHT, BASE_X + 5*SPREAD + Card.CARD_WIDTH, Card.CARD_HEIGHT);
-            hitBoxes[2][1] = new Rectangle(BASE_X + ROW_START_X, BASE_Y + 2*Card.CARD_HEIGHT, DEST_ROW_WIDTH, Card.CARD_HEIGHT);
+            hitBoxes[2][0] = new Rectangle(BASE_X + 5, BASE_Y + 2*Card.CARD_HEIGHT + 5, BASE_X + 5*SPREAD + Card.CARD_WIDTH, Card.CARD_HEIGHT);
+            hitBoxes[2][1] = new Rectangle(BASE_X + 5 + ROW_START_X, BASE_Y + 2*Card.CARD_HEIGHT + 5, DEST_ROW_WIDTH, Card.CARD_HEIGHT);
             
-            hitBoxes[3][0] = new Rectangle(BASE_X, BASE_Y + 3*Card.CARD_HEIGHT, BASE_X + 5*SPREAD + Card.CARD_WIDTH, Card.CARD_HEIGHT);
-            hitBoxes[3][1] = new Rectangle(BASE_X + ROW_START_X, BASE_Y + 3*Card.CARD_HEIGHT, DEST_ROW_WIDTH, Card.CARD_HEIGHT);
+            hitBoxes[3][0] = new Rectangle(BASE_X + 5, BASE_Y + 3*Card.CARD_HEIGHT + 5, BASE_X + 5*SPREAD + Card.CARD_WIDTH, Card.CARD_HEIGHT);
+            hitBoxes[3][1] = new Rectangle(BASE_X + 5 + ROW_START_X, BASE_Y + 3*Card.CARD_HEIGHT + 5, DEST_ROW_WIDTH, Card.CARD_HEIGHT);
             
-            hitBoxes[4][0] = new Rectangle(BASE_X, BASE_Y + 4*Card.CARD_HEIGHT, BASE_X + 5*SPREAD + Card.CARD_WIDTH + DEST_ROW_WIDTH, Card.CARD_HEIGHT);
-            hitBoxes[4][1] = new Rectangle(BASE_X, BASE_Y + 4*Card.CARD_HEIGHT, BASE_X + 5*SPREAD + Card.CARD_WIDTH + DEST_ROW_WIDTH, Card.CARD_HEIGHT);
+            hitBoxes[4][0] = new Rectangle(BASE_X + 5, BASE_Y + 4*Card.CARD_HEIGHT + 5, BASE_X + 5*SPREAD + Card.CARD_WIDTH + DEST_ROW_WIDTH, Card.CARD_HEIGHT);
+            hitBoxes[4][1] = new Rectangle(BASE_X + 5, BASE_Y + 4*Card.CARD_HEIGHT + 5, BASE_X + 5*SPREAD + Card.CARD_WIDTH + DEST_ROW_WIDTH, Card.CARD_HEIGHT);
 	}
                 
 	/* Variables for game logic checks */
@@ -273,13 +277,12 @@ class BlueMoon extends JComponent
             tempMove[1] = dRow;
             tempMove[2] = dPtr;
             prevMoves.add(tempMove);
-            //System.out.println("Push: " + prevMoves.lastElement()[0] + " " + prevMoves.lastElement()[1]+ " " + prevMoves.lastElement()[2]);
         }
         
         public void handleDoubleClick(Point p)
         {
             updateSourceCard(p);
-            
+
             if(sourceRow != -1)
             {
                 for(int i = 0; i < 4; i++)
@@ -307,7 +310,18 @@ class BlueMoon extends JComponent
                             R_piles.elementAt(i).add(temp);
                             decDeckPtr();
                         }
+                        
                         changeHappened = true;
+                        repaint();
+                        
+                        if(winCheck())
+                        {
+                            JOptionPane.showMessageDialog(Board.frame, "Congratulations, you've won!", "Winner!", JOptionPane.INFORMATION_MESSAGE);
+                            winState = true;
+                            changeHappened = true;
+                            repaint();
+                        }
+
                     }
                 }
             }
@@ -360,7 +374,8 @@ class BlueMoon extends JComponent
         }
                 
         /* Determine destination row from Point object 'stop' */
-        public int getDestRow(Point stop) {
+        public int getDestRow(Point stop) 
+        {
             for (int i = 0; i < 5; i++) 
             {
                 if (hitBoxes[i][1].contains(stop)) 
@@ -370,7 +385,19 @@ class BlueMoon extends JComponent
             }
             return -1;
         }
-                
+        
+        public boolean winCheck()
+        {
+            for(int i = 0; i < 5; i++)
+            {
+                if(!L_piles.elementAt(i).isEmpty())
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+        
         public void handleMouseRelease(Point stop) 
         {
             /* Determine destination row from 'stop' Point */
@@ -380,10 +407,10 @@ class BlueMoon extends JComponent
             if (destRow != -1 && destRow <= 4 && source != null) 
             {
                 /* Determine if move is valid */
-                if (validPlayStackMove(source, destRow)) 
-                //if(true)
+                //if (validPlayStackMove(source, destRow)) 
+                if(true)
                 {
-                    Card temp = null;
+                    Card temp;
                     
                     /* Check sourceRow and destRow combo is valid */
                     if (sourceRow < 4 && destRow != 4) 
@@ -409,7 +436,9 @@ class BlueMoon extends JComponent
                         R_piles.elementAt(destRow).add(temp);
                         decDeckPtr();
                     }
+                    
                     changeHappened = true;
+                    repaint();
                 }
             } 
             /* Invalid parameters */
@@ -492,7 +521,7 @@ class BlueMoon extends JComponent
 	{
 		_x = x;
 		_y = y;
-		setBounds(_x, _y, Card.CARD_WIDTH + 500, Card.CARD_HEIGHT + 500);
+		setBounds(_x, _y, Board.table.getWidth(), Board.table.getHeight());
 	}
 
 	public Point getXY()
@@ -500,15 +529,87 @@ class BlueMoon extends JComponent
 		return new Point(_x, _y);
 	}
 
-	@Override
-	protected void paintComponent(Graphics g)
-	{
-            if(changeHappened)
+        public void handleWin()
+        {
+            JOptionPane.showMessageDialog(Board.frame, "Congratulations, you've won!", "Winner!", JOptionPane.INFORMATION_MESSAGE);
+            winState = true;
+            changeHappened = true;
+            repaint();
+        }
+        
+        private class winAnimation
+        {
+            double a = .8, theta = 0, thetaChange = 1.5;
+            boolean toggle = false;
+            
+            public void play()
             {
-                //System.out.println("printing");
-                super.paintComponent(g);
-                removeAll();
+                if (theta == 0) 
+                {
+                    removeAll();
+                }
 
+                int startX = (Board.table.getWidth() - Card.CARD_WIDTH - 5) / 2;
+                int startY = (Board.table.getHeight() - Card.CARD_HEIGHT - 5) / 2;
+
+                Card tempC = null;
+
+                try 
+                {
+                    tempC = new Card();
+                    if (toggle) 
+                    {
+                        tempC.setFaceup();
+                    } 
+                    else 
+                    {
+                        tempC.setFacedown();
+                    }
+                    toggle = !toggle;
+                } 
+                catch (IOException ex) 
+                {
+                    Logger.getLogger(BlueMoon.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                double tempX = a * theta * cos(theta);
+                double tempY = a * theta * sin(theta);
+
+                /* Set paint coordinates for card */
+                if (tempC != null) 
+                {
+                    tempC.setXY(new Point((int) tempX + startX, (int) tempY + startY));
+                    add(Board.moveCard(tempC, (int) tempX + startX, (int) tempY + startY));
+                    tempC.setWhereAmI(getXY());
+                    theta += thetaChange;
+                    Board.table.repaint();
+                }
+
+                if ((int) tempX > Board.frame.getWidth() / 2 && (int) tempY > Board.frame.getHeight() / 2) 
+                {
+                    theta = 0;
+                    thetaChange += .1;
+                    if (thetaChange > 5) 
+                    {
+                        thetaChange = 3;
+                    }
+                }
+
+                try 
+                {
+                    Thread.sleep(5);
+                } 
+                catch (InterruptedException ex) 
+                {
+                    Logger.getLogger(BlueMoon.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+        
+        public class paintManager
+        {
+            public void paintLeftPiles()
+            {
                 /* Cycle through the four Left piles */
                 for (int i = 0; i < 4; i++) 
                 {
@@ -519,12 +620,9 @@ class BlueMoon extends JComponent
                         Card c = outer.elementAt(j);
 
                         /* If it's the top, set it faceup */
-                        if (j == 0) 
-                        {
+                        if (j == 0) {
                             c.setFaceup();
-                        }
-                        else
-                        {
+                        } else {
                             c.setFacedown();
                         }
 
@@ -533,26 +631,35 @@ class BlueMoon extends JComponent
                         add(Board.moveCard(c, pilePos[i].x + j * SPREAD, pilePos[i].y));
                         c.setWhereAmI(getXY());
                     }
-
+                }
+            }
+            
+            public void paintRightPiles()
+            {
+                for (int i = 0; i < 4; i++) 
+                {
                     Vector<Card> rp = R_piles.elementAt(i);
                     /* Cycle through each right pile */
-                    for (int j = rp.size(); j > 0 ; j--) 
+                    for (int j = rp.size(); j > 0; j--) 
                     {
                         /* Set them faceup */
-                        Card c = rp.elementAt(j-1);
+                        Card c = rp.elementAt(j - 1);
                         c.setFaceup();
 
                         /* Set Pain coordinates for card */
-                        c.setXY(new Point(pilePos[i].x + ROW_START_X + j*(SPREAD*2), pilePos[i].y));
-                        add(Board.moveCard(c, pilePos[i].x + ROW_START_X + j*(SPREAD*2), pilePos[i].y));
+                        c.setXY(new Point(pilePos[i].x + ROW_START_X + j * (SPREAD * 2), pilePos[i].y));
+                        add(Board.moveCard(c, pilePos[i].x + ROW_START_X + j * (SPREAD * 2), pilePos[i].y));
                         c.setWhereAmI(getXY());
                     }
-                }    
-
+                }
+            }
+            
+            public void paintDeckPile()
+            {
                 int spreadVar = 0;
 
                 /* If deck isn't empty, show card at deckPtr */
-                if(!L_piles.elementAt(4).isEmpty())
+                if (!L_piles.elementAt(4).isEmpty()) 
                 {
                     Card c_temp = L_piles.elementAt(4).elementAt(deckPtr);
                     c_temp.setFaceup();
@@ -562,8 +669,8 @@ class BlueMoon extends JComponent
                 }
 
                 /* Don't actually know why I need this outer loop,
-                   but it doesn't work without it. */
-                for(int i = 0; i < 5; i++)
+                       but it doesn't work without it. */
+                for (int i = 0; i < 5; i++) 
                 {
                     /* Cycle through deck pile */
                     for (int j = 0; j < L_piles.elementAt(4).size(); j++) 
@@ -574,22 +681,20 @@ class BlueMoon extends JComponent
                         if (j == deckPtr - 1) 
                         {
                             spreadVar = 80;
-                            c.setXY(new Point(pilePos[i].x + (j+1) * SPREAD, pilePos[i].y));
-                            add(Board.moveCard(c, pilePos[i].x + (j+1) * SPREAD, pilePos[i].y));
+                            c.setXY(new Point(pilePos[i].x + (j + 1) * SPREAD, pilePos[i].y));
+                            add(Board.moveCard(c, pilePos[i].x + (j + 1) * SPREAD, pilePos[i].y));
                             c.setWhereAmI(getXY());
 
-                            //c.setFaceup();
                             c.setFacedown();
                         } 
-                        /* Spreads deck for single card */
-                        else if(j == 0 && deckPtr == 0)
+                        /* Spreads deck for single card */ 
+                        else if (j == 0 && deckPtr == 0) 
                         {
                             spreadVar = 80;
-                        }
+                        } 
                         /* Paint deck card */
-                        else if(j != deckPtr)
+                        else if (j != deckPtr) 
                         {
-                            //c.setFaceup();
                             c.setFacedown();
                             c.setXY(new Point(pilePos[i].x + spreadVar + (j + 1) * SPREAD, pilePos[i].y));
                             add(Board.moveCard(c, pilePos[i].x + spreadVar + (j + 1) * SPREAD, pilePos[i].y));
@@ -597,8 +702,32 @@ class BlueMoon extends JComponent
                         }
                     }
                     spreadVar = 0;
-                }   
-            changeHappened = false;
-	}
+                }
+            }
+        }
+        
+	@Override
+	protected void paintComponent(Graphics g)
+	{
+            if(changeHappened)
+            {
+                super.paintComponent(g);
+                this.setXY(_x, _y);
+                
+                if(winState)
+                {
+                    animation.play();
+                }
+                else
+                {
+                    removeAll();
+                    
+                    deckPainter.paintLeftPiles();
+                    deckPainter.paintRightPiles();
+                    deckPainter.paintDeckPile();
+                    
+                    changeHappened = false;
+                }
+            }
         }
 }
