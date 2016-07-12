@@ -6,7 +6,7 @@
   *          Implements logic for painting and moving cards.
   *****************************************************************************/
 
-import gui.GuiCard;
+import oiabm.gui.GuiCard;
 import oiabm.core.CardSuit;
 import oiabm.core.CardValue;
 
@@ -465,14 +465,14 @@ class BlueMoon extends JComponent {
             int startX = (Board.table.getWidth() - GuiCard.CARD_WIDTH - 5) / 2;
             int startY = (Board.table.getHeight() - GuiCard.CARD_HEIGHT - 5) / 2;
 
-            GuiCard tempC = null;
+            GuiCard tempCard = null;
 
             try {
-                tempC = new GuiCard();
+                tempCard = new GuiCard(CardSuit.SPADES, CardValue.ACE);  // the only card i need... rip lemmy
                 if (toggle) {
-                    tempC.setFaceUp();
+                    tempCard.setFaceUp();
                 } else {
-                    tempC.setFaceDown();
+                    tempCard.setFaceDown();
                 }
                 toggle = !toggle;
             } catch (IOException ex) {
@@ -483,10 +483,10 @@ class BlueMoon extends JComponent {
             double tempY = a * theta * sin(theta);
 
                 /* Set paint coordinates for card */
-            if (tempC != null) {
-                tempC.setPosition(new Point((int) tempX + startX, (int) tempY + startY));
-                add(Board.moveCard(tempC, (int) tempX + startX, (int) tempY + startY));
-                tempC.setWhereAmI(getPosition());
+            if (tempCard != null) {
+                tempCard.setPosition(new Point((int) tempX + startX, (int) tempY + startY));
+                add(Board.moveCard(tempCard, (int) tempX + startX, (int) tempY + startY));
+                tempCard.setWhereAmI(getPosition());
                 theta += thetaChange;
                 Board.table.repaint();
             }
@@ -509,7 +509,7 @@ class BlueMoon extends JComponent {
 
     public class paintManager {
         public void paintLeftPiles() {
-                /* Cycle through the four Left piles */
+            /* Cycle through the four Left piles */
             for (int i = 0; i < 4; i++) {
                 Vector<GuiCard> outer = leftPiles.elementAt(i);
                     /* Cycle through each left pile */

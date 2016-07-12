@@ -6,7 +6,7 @@
   *          Designed to contain a solitaire class, in this case BlueMoon.
   *****************************************************************************/
 
-import gui.GuiCard;
+import oiabm.gui.GuiCard;
 
 import java.awt.Color;
 import java.awt.Container;
