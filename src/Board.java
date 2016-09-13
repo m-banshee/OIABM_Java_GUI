@@ -112,10 +112,10 @@ public class Board implements ItemListener {
     }
 
     /*
-* This class handles all of the logic of moving the gui.GuiCard components as well
-* as the game logic. This determines where Cards can be moved according to
-* the rules of OIABM.
-*/
+     * This class handles all of the logic of moving the gui.GuiCard components as well
+     * as the game logic. This determines where Cards can be moved according to
+     * the rules of OIABM.
+     */
     private static class CardMovementManager extends MouseAdapter {
         MouseEvent startE, stopE;
         boolean released = false;
